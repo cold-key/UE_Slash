@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Items/Item.h"
+#include "SlashCharacterEnum.h"
 #include "SlashCharacter.generated.h"
 
 class UCameraComponent;
 class USpringArmComponent;
 class UGroomComponent;
+class AItem;
+class UAnimMontage;
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ACharacter
@@ -17,16 +19,23 @@ class SLASH_API ASlashCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ASlashCharacter();
-
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	void SetItemPtr(AItem* InItem) { itemPtr = InItem; };
+
+	UFUNCTION(BlueprintPure)
+	ESlashCharacterEquipState GetEquipState() { return equipState; };
+
+	UFUNCTION(BlueprintCallable)
+	void SetEquipState(ESlashCharacterEquipState nextState) { equipState = nextState; };
+
+	UFUNCTION(BlueprintPure)
+	ESlashCharacteAttackState GetAttackState() { return attackState; };
+
+	UFUNCTION(BlueprintCallable)
+	void SetAttackState(ESlashCharacteAttackState nextState) { attackState = nextState; };
 
 protected:
 	// Called when the game starts or when spawned
@@ -38,6 +47,7 @@ protected:
 	void UpViewByMouse(float value);
 	void JumpBySpaceBar();
 	void onPressE();
+	void onAttack();
 
 private:
 
@@ -55,5 +65,14 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	AItem* itemPtr;
+
+	UPROPERTY(VisibleAnywhere)
+	ESlashCharacterEquipState equipState = ESlashCharacterEquipState::Unequiped;
+
+	UPROPERTY(VisibleAnywhere)
+	ESlashCharacteAttackState attackState = ESlashCharacteAttackState::NoAttacking;
+
+	UPROPERTY(EditDefaultsOnly,Category = "Montage")
+	UAnimMontage* attackMontage;
 
 };

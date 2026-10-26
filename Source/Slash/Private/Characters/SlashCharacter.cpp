@@ -6,6 +6,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GroomComponent.h"
+#include "Animation/AnimMontage.h"
+#include "Items/Item.h"
 
 
 // Sets default values
@@ -60,6 +62,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAction(FName("Jump"), EInputEvent::IE_Pressed, this, &ASlashCharacter::JumpBySpaceBar);
 	PlayerInputComponent->BindAction(FName("PressE"), EInputEvent::IE_Pressed, this, &ASlashCharacter::onPressE);
+	PlayerInputComponent->BindAction(FName("Attack"), EInputEvent::IE_Pressed, this, &ASlashCharacter::onAttack);
 
 }
 
@@ -108,6 +111,26 @@ void ASlashCharacter::onPressE()
 	if (itemPtr) {
 		FAttachmentTransformRules rules (EAttachmentRule::SnapToTarget,false);
 		itemPtr->AttachToComponent(GetMesh(),rules,FName("RightHand"));
+		SetEquipState(ESlashCharacterEquipState::Equiped);
+	}
+}
+
+void ASlashCharacter::onAttack()
+{
+	if (GEngine) {
+		GEngine->AddOnScreenDebugMessage(-1,60.f, FColor::Blue,FString("On Enter ASlashCharacter::OnAttack"));
+	}
+	if (equipState == ESlashCharacterEquipState::Equiped && attackState == ESlashCharacteAttackState::NoAttacking) {
+		UAnimInstance* animInstance =  GetMesh()->GetAnimInstance();
+		if (animInstance && attackMontage) {
+			animInstance->Montage_Play(attackMontage);
+			int32 random = FMath::RandRange(1,3);
+			const int32 AttackIndex = FMath::RandRange(1, 3);
+			const FName SectionName(*FString::Printf(TEXT("Attack%d"), AttackIndex));
+			animInstance->Montage_JumpToSection(SectionName);
+
+			SetAttackState(ESlashCharacteAttackState::Attacking);
+		}
 	}
 }
 
