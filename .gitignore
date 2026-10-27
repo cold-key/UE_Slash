@@ -6,6 +6,10 @@ Saved/
 
 # IDE files
 .vs/
+.vscode/
+*.code-workspace
+# UnrealBuildTool generated search exclusions
+/.ignore
 .idea/
 *.sln
 *.slnx
