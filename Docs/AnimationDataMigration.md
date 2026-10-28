@@ -66,3 +66,11 @@ UAnimInstance
 - `Slash.Animation.BlueprintIntegration`：加载现有角色蓝图，验证原生动画父类、动画图求值及保留的攻击结束通知。
 
 最后在 `SlashOpenWorld` 中进行人工 PIE 检查：站立和跑动切换、起跳和落地、拾取武器后的姿势、攻击后的恢复，以及斜坡和台阶上的脚部 IK。观察 Output Log，确认没有本次迁移引起的 `Accessed None` 或动画蓝图编译错误。无渲染的自动化测试不验证最终视觉效果。
+
+## 6. 左脚斜坡 IK 示例
+
+脚部调用链为 `ABP_SlashCharacter → ABP_Echo_Foot_Trace → /Game/Blueprints/Characters/Rig/CR_SlashCharacters`。`USlashAnimInstance::UpdateCharacterData()` 提供的 `Speed` 和 `isFalling` 通过 Linked Anim Graph 传入脚部动画蓝图；现有启用条件为 `!isFalling && Speed <= 0`，同时控制 Rig Alpha 和 `isDoIKTrace`，因此该示例用于站立贴坡。
+
+`CR_SlashCharacters` 的 `FootTrace` 返回命中位置、法线和 `bHit`，均在 Rig Global Space。新增 `LeftFootSlopeTarget` 函数读取原动画脚踝姿势，以水平参考姿势标定脚底方向及脚踝高度；分别平滑法线分量，计算贴坡旋转和位置，未命中或禁用时返回原动画。位置 Z 继续使用原有 `L_Z` 平滑结果，右脚与骨盆保持原有处理链。高度标定假定参考姿势的脚底平面位于 `root.Z`。
+
+执行顺序为复制动画脚姿势到 IK 骨骼、检测地面、平滑高度、右脚及骨盆偏移、设置左脚完整目标、FBIK。`ReadFinalLeftTarget` 专用于在设置目标后读取 `ik_foot_l`，避免与原动画输入复用读取节点。函数内部有按 1～5 步组织的中文注释。修改前资产备份及检查日志位于不纳入版本控制的 `Saved/Diagnostics/SlashIK/Edit/`。
